@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
-public class NumberGuesser {
+public class NumberGuesser2 {
     private int maxLevel = 1;
     private int level = 1;
     private int strikes = 0;
@@ -203,7 +203,7 @@ public class NumberGuesser {
     }
 
     public static void main(String[] args) {
-        NumberGuesser ng = new NumberGuesser();
+        NumberGuesser2 ng = new NumberGuesser2();
         ng.start();
     }
 }
