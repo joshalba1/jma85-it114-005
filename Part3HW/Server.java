@@ -1,11 +1,11 @@
 package Part3HW;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public class Server {
     int port = 3001;
@@ -81,7 +81,51 @@ public class Server {
                 }
             }
             return true;
+        }else if (message.startsWith("roll")) {
+           
+            String[] parts = message.split(" ");
+            if (parts.length == 2) {
+                String[] diceParams = parts[1].split("d");
+                if (diceParams.length == 2) {
+                    try {
+                        int numDice = Integer.parseInt(diceParams[0]);
+                        int numSides = Integer.parseInt(diceParams[1]);
+
+
+                       
+                        Random random = new Random();
+                        int total = 0;
+                        StringBuilder finalMessage = new StringBuilder("Rolled ");
+                        for (int i = 0; i < numDice; i++) {
+                            int roll = random.nextInt(numSides) + 1;
+                            total += roll;
+                            finalMessage.append(roll);
+                            if (i < numDice - 1) {
+                                finalMessage.append(", ");
+                            }
+                        }
+                        finalMessage.append(" (" + numDice + "d" + numSides + ")");
+
+
+                       
+                        broadcast("User[" + clientId + "] " + finalMessage.toString(), clientId);
+                        return true;
+                    } catch (NumberFormatException e) {
+                        broadcast("Invalid dice roll command format. Use 'roll #d#'", clientId);
+                        return true;
+                    }
+                }
+            }
+            broadcast("Invalid dice roll command format. Use 'roll #d#'", clientId);
+            return true;
+        }else if (message.equalsIgnoreCase("flip")) {
+            // Handle coin toss command
+            Random random = new Random();
+            String result = random.nextBoolean() ? "heads" : "tails";
+            broadcast("User[" + clientId + "] Flipped a coin and got: " + result, clientId);
+            return true;
         }
+
         return false;
     }
     public static void main(String[] args) {
