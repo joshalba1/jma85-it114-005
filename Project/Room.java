@@ -3,6 +3,9 @@ package Project;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Room implements AutoCloseable{
 	protected static Server server;// used to refer to accessible server functions
@@ -14,6 +17,8 @@ public class Room implements AutoCloseable{
 	private final static String CREATE_ROOM = "createroom";
 	private final static String JOIN_ROOM = "joinroom";
 	private final static String DISCONNECT = "disconnect";
+	private final static String ROLL = "roll";
+	private final static String FLIP = "flip";
 	private final static String LOGOUT = "logout";
 	private final static String LOGOFF = "logoff";
 
@@ -166,14 +171,19 @@ public class Room implements AutoCloseable{
 			// it was a command, don't broadcast
 			return;
 		}
-		
-		String from = (sender == null ? "Room" : sender.getClientName());
-		Iterator<ServerThread> iter = clients.iterator();
-		while (iter.hasNext()) {
-			ServerThread client = iter.next();
-			boolean messageSent = client.sendMessage(from, message);
-			if (!messageSent) {
-				handleDisconnect(iter, client);
+		if (sender != null && message.startsWith(COMMAND_TRIGGER)) {
+			// Process message commands
+			processMessageCommand(message, sender);
+		} else {
+			String from = (sender == null ? "Room" : sender.getClientName());
+			String formattedMessage = processFormatting(message);
+			Iterator<ServerThread> iter = clients.iterator();
+			while (iter.hasNext()) {
+				ServerThread client = iter.next();
+				boolean messageSent = client.sendMessage(from, formattedMessage);
+				if (!messageSent) {
+					handleDisconnect(iter, client);
+				}
 			}
 		}
 	}
@@ -199,4 +209,110 @@ public class Room implements AutoCloseable{
 		isRunning = false;
 		clients = null;
 	}
+
+	//JMA85 11/10/23
+	private void processMessageCommand(String message, ServerThread sender) {
+		try {
+			String[] commandParts = message.split(" ");
+			String command = commandParts[0].substring(1);
+			
+			switch (command) {
+				case ROLL:
+					handleRollCommand(commandParts, sender);
+					break;
+				case FLIP:
+					handleFlipCommand(sender);
+					break;
+				default:
+					// Handle other commands if needed
+					break;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void handleRollCommand(String[] commandParts, ServerThread sender) {
+		try {
+			int result;
+	
+			if (commandParts.length == 2) {
+				// /roll #d#
+				String[] diceParams = commandParts[1].split("d");
+				if (diceParams.length == 2) {
+					int numDice = Integer.parseInt(diceParams[0]);
+					int numSides = Integer.parseInt(diceParams[1]);
+	
+					Random random = new Random();
+					int total = 0;
+					for (int i = 0; i < numDice; i++) {
+						int roll = random.nextInt(numSides) + 1;
+						total += roll;
+					}
+	
+					// Send total roll to client
+					sendMessage(sender, "rolled a " + total);
+				} else {
+					// Check for single die roll
+					int numSides = Integer.parseInt(commandParts[1]);
+					int roll = new Random().nextInt(numSides) + 1;
+	
+					// Send single die roll to client
+					sendMessage(sender, "rolled a " + roll);
+				}
+			} else {
+				// Invalid roll command format
+				sender.sendMessage("Server", "Invalid /roll command format. Use 'roll #d#' or 'roll #'");
+			}
+		} catch (NumberFormatException e) {
+			sender.sendMessage("Server", "Invalid /roll command format. Use 'roll #d#' or 'roll #'");
+		}
+	}
+	
+	private void handleFlipCommand(ServerThread sender) {
+		// Coin toss (0 heads 1 tails)
+		int result = (int) (Math.random() * 2);
+	
+		// converts 0 and 1 to heads and tails
+		String flipResult = (result == 0) ? "heads" : "tails";
+	
+		// sends result to client
+		sendMessage(sender, "flipped a coin and got " + flipResult);
+	}
+
+
+	//JMA85 1
+	private String processFormatting(String message) {
+		// regex for styles
+		Pattern boldPattern = Pattern.compile("\\*(.*?)\\*");
+		Pattern italicPattern = Pattern.compile("\\-(.*?)\\-");
+		Pattern underlinePattern = Pattern.compile("\\_(.*?)\\_");
+		Pattern redPattern = Pattern.compile("\\[r (.*?) r\\]");
+		Pattern greenPattern = Pattern.compile("\\[g (.*?) g\\]");
+		Pattern bluePattern = Pattern.compile("\\[b (.*?) b\\]");
+	
+		// Replace with HTML tags
+		message = replacePattern(message, boldPattern, "<b>$1</b>");
+		message = replacePattern(message, italicPattern, "<i>$1</i>");
+		message = replacePattern(message, underlinePattern, "<u>$1</u>");
+		message = replacePattern(message, redPattern, "<font color=red>$1</font>");
+		message = replacePattern(message, greenPattern, "<font color=green>$1</font>");
+		message = replacePattern(message, bluePattern, "<font color=blue>$1</font>");
+	
+		return message;
+	}
+	
+	private String replacePattern(String input, Pattern pattern, String replacement) {
+		Matcher matcher = pattern.matcher(input);
+		StringBuffer result = new StringBuffer();
+		while (matcher.find()) {
+			matcher.appendReplacement(result, replacement);
+		}
+		matcher.appendTail(result);
+		return result.toString();
+	}
+	
+	
+
 }
+
