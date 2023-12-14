@@ -1,6 +1,13 @@
 package Project2.server;
 
 
+
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -9,7 +16,9 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 import Project2.common.Constants;
+
 
 public class Room implements AutoCloseable {
     // server is a singleton now so we don't need this
@@ -19,7 +28,10 @@ public class Room implements AutoCloseable {
     private List<ServerThread> clients = new ArrayList<ServerThread>();
     private boolean isRunning = false;
 
+
     private List<String> mutedUsers = new ArrayList<String>(); // List to store muted usernames
+
+    private static final String MUTED_USERS_FILE = "muted_users.txt";
 
 
     // Commands
@@ -30,26 +42,34 @@ public class Room implements AutoCloseable {
     private final static String LOGOUT = "logout";
     private final static String LOGOFF = "logoff";
 
+
     private final static String ROLL = "roll";
-	private final static String FLIP = "flip";
+    private final static String FLIP = "flip";
+
 
     private final static String MUTE = "mute";
     private final static String UNMUTE = "unmute";
 
+
     private static Logger logger = Logger.getLogger(Room.class.getName());
+
 
     public Room(String name) {
         this.name = name;
         isRunning = true;
+        loadMutedUsers();
     }
+
 
     public String getName() {
         return name;
     }
 
+
     public boolean isRunning() {
         return isRunning;
     }
+
 
     protected synchronized void addClient(ServerThread client) {
         if (!isRunning) {
@@ -65,6 +85,7 @@ public class Room implements AutoCloseable {
             sendConnectionStatus(client, true);
         }
     }
+
 
     protected synchronized void removeClient(ServerThread client) {
         if (!isRunning) {
@@ -84,6 +105,7 @@ public class Room implements AutoCloseable {
         checkClients();
     }
 
+
     private void syncCurrentUsers(ServerThread client) {
         Iterator<ServerThread> iter = clients.iterator();
         while (iter.hasNext()) {
@@ -100,6 +122,7 @@ public class Room implements AutoCloseable {
         }
     }
 
+
     /***
      * Checks the number of clients.
      * If zero, begins the cleanup process to dispose of the room
@@ -111,9 +134,10 @@ public class Room implements AutoCloseable {
         }
     }
 
+
     /***
      * Helper function to process messages to trigger different functionality.
-     * 
+     *
      * @param message The original message being sent
      * @param client  The sender of the message (since they'll be the ones
      *                triggering the actions)
@@ -145,10 +169,12 @@ public class Room implements AutoCloseable {
                         Room.disconnectClient(client, this);
                         break;
 
+
                         case "mute":
                         String targetUsername = comm2[1];
                         muteUser(client, targetUsername);
                         break;
+
 
                     case "unmute":
                         targetUsername = comm2[1];
@@ -165,12 +191,14 @@ public class Room implements AutoCloseable {
         return wasCommand;
     }
 
+
     // Command helper methods
     protected static void getRooms(String query, ServerThread client) {
         String[] rooms = Server.INSTANCE.getRooms(query).toArray(new String[0]);
         client.sendRoomsList(rooms,
                 (rooms != null && rooms.length == 0) ? "No rooms found containing your query string" : null);
     }
+
 
     protected static void createRoom(String roomName, ServerThread client) {
         if (Server.INSTANCE.createNewRoom(roomName)) {
@@ -180,10 +208,11 @@ public class Room implements AutoCloseable {
         }
     }
 
+
     /**
      * Will cause the client to leave the current room and be moved to the new room
      * if applicable
-     * 
+     *
      * @param roomName
      * @param client
      */
@@ -193,17 +222,19 @@ public class Room implements AutoCloseable {
         }
     }
 
+
     protected static void disconnectClient(ServerThread client, Room room) {
         client.disconnect();
         room.removeClient(client);
     }
     // end command helper methods
 
+
     /***
      * Takes a sender and a message and broadcasts the message to all clients in
      * this room. Client is mostly passed for command purposes but we can also use
      * it to extract other client info.
-     * 
+     *
      * @param sender  The client sending the message
      * @param message The message to broadcast inside the room
      */
@@ -211,19 +242,19 @@ public class Room implements AutoCloseable {
         if (!isRunning) {
             return;
         }
-    
+   
         if (sender != null && processCommands(message, sender)) {
             // If it was a command, don't broadcast
             return;
         }
-    
+   
         if (sender != null && mutedUsers.contains(sender.getClientName())) {
             sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "You are muted");
             return;
         }
-    
+   
         String formattedMessage = processFormatting(message);
-    
+   
         // Iterate through clients and send the message
         for (ServerThread client : clients) {
             if (!mutedUsers.contains(client.getClientName())) {
@@ -233,13 +264,13 @@ public class Room implements AutoCloseable {
                 }
             }
         }
-    
+   
         // Additional logic for handling special cases
         if (sender != null && message.startsWith(COMMAND_TRIGGER)) {
             // Process message commands
             processMessageCommand(message, sender);
         }
-    
+   
         if (message.startsWith("@")) {
             sendPrivateMessage(sender, message);
         }
@@ -258,6 +289,7 @@ public class Room implements AutoCloseable {
         }
     }
 
+
     private void handleDisconnect(Iterator<ServerThread> iter, ServerThread client) {
         iter.remove();
         logger.info(String.format("Removed client %s", client.getClientName()));
@@ -265,134 +297,142 @@ public class Room implements AutoCloseable {
         checkClients();
     }
 
+
     public void close() {
         Server.INSTANCE.removeRoom(this);
         isRunning = false;
         clients.clear();
     }
 private void processMessageCommand(String message, ServerThread sender) {
-		try {
-			String[] commandParts = message.split(" ");
-			String command = commandParts[0].substring(1);
-			
-			switch (command) {
-				case ROLL:
-					handleRollCommand(commandParts, sender);
-					break;
-				case FLIP:
-					handleFlipCommand(sender);
-					break;
+        try {
+            String[] commandParts = message.split(" ");
+            String command = commandParts[0].substring(1);
+           
+            switch (command) {
+                case ROLL:
+                    handleRollCommand(commandParts, sender);
+                    break;
+                case FLIP:
+                    handleFlipCommand(sender);
+                    break;
 
 
-				default:
-					// Handle other commands if needed
-					break;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private void handleRollCommand(String[] commandParts, ServerThread sender) {
-		try {
-			int result;
-	
-			if (commandParts.length == 2) {
-				// /roll #d#
-				String[] diceParams = commandParts[1].split("d");
-				if (diceParams.length == 2) {
-					int numDice = Integer.parseInt(diceParams[0]);
-					int numSides = Integer.parseInt(diceParams[1]);
-	
-					Random random = new Random();
-					int total = 0;
-					for (int i = 0; i < numDice; i++) {
-						int roll = random.nextInt(numSides) + 1;
-						total += roll;
-					}
-	
-					// Send total roll to client
-					sendMessage(sender, "*rolled a " + total + "*");
-				} else {
-					// Check for single die roll
-					int numSides = Integer.parseInt(commandParts[1]);
-					int roll = new Random().nextInt(numSides) + 1;
-	
-					// Send single die roll to client
-					sendMessage(sender, "*rolled a " + roll + "*");
-				}
-			} else {
-				// Invalid roll command format
-				sendMessage(sender, "Invalid /roll command format. Use 'roll #d#' or 'roll #'");
-			}
-		} catch (NumberFormatException e) {
-			sendMessage(sender, "Invalid /roll command format. Use 'roll #d#' or 'roll #'");
-		}
-	}
-	
-	private void handleFlipCommand(ServerThread sender) {
-		// Coin toss (0 heads 1 tails)
-		int result = (int) (Math.random() * 2);
-	
-		// converts 0 and 1 to heads and tails
-		String flipResult = (result == 0) ? "heads" : "tails";
-	
-		// sends result to client
-		sendMessage(sender, "*flipped a coin and got " + flipResult + "*");
-	}
 
 
-	
-	private String processFormatting(String message) {
-		// regex for styles
-		Pattern boldPattern = Pattern.compile("\\*(.*?)\\*");
-		Pattern italicPattern = Pattern.compile("\\-(.*?)\\-");
-		Pattern underlinePattern = Pattern.compile("\\_(.*?)\\_");
-		Pattern redPattern = Pattern.compile("\\[r (.*?) r\\]");
-		Pattern greenPattern = Pattern.compile("\\[g (.*?) g\\]");
-		Pattern bluePattern = Pattern.compile("\\[b (.*?) b\\]");
-	
-		// Replace with HTML tags
-		message = replacePattern(message, boldPattern, "<b>$1</b>");
-		message = replacePattern(message, italicPattern, "<i>$1</i>");
-		message = replacePattern(message, underlinePattern, "<u>$1</u>");
-		message = replacePattern(message, redPattern, "<font color=red>$1</font>");
-		message = replacePattern(message, greenPattern, "<font color=green>$1</font>");
-		message = replacePattern(message, bluePattern, "<font color=blue>$1</font>");
-	
-		return message;
-	}
-	
-	private String replacePattern(String input, Pattern pattern, String replacement) {
-		Matcher matcher = pattern.matcher(input);
-		StringBuffer result = new StringBuffer();
-		while (matcher.find()) {
-			matcher.appendReplacement(result, replacement);
-		}
-		matcher.appendTail(result);
-		return result.toString();
-	}
-	private void sendPrivateMessage(ServerThread sender, String message) {
-        
+                default:
+                    // Handle other commands if needed
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+   
+    private void handleRollCommand(String[] commandParts, ServerThread sender) {
+        try {
+            int result;
+   
+            if (commandParts.length == 2) {
+                // /roll #d#
+                String[] diceParams = commandParts[1].split("d");
+                if (diceParams.length == 2) {
+                    int numDice = Integer.parseInt(diceParams[0]);
+                    int numSides = Integer.parseInt(diceParams[1]);
+   
+                    Random random = new Random();
+                    int total = 0;
+                    for (int i = 0; i < numDice; i++) {
+                        int roll = random.nextInt(numSides) + 1;
+                        total += roll;
+                    }
+   
+                    // Send total roll to client
+                    sendMessage(sender, "*rolled a " + total + "*");
+                } else {
+                    // Check for single die roll
+                    int numSides = Integer.parseInt(commandParts[1]);
+                    int roll = new Random().nextInt(numSides) + 1;
+   
+                    // Send single die roll to client
+                    sendMessage(sender, "*rolled a " + roll + "*");
+                }
+            } else {
+                // Invalid roll command format
+                sendMessage(sender, "Invalid /roll command format. Use 'roll #d#' or 'roll #'");
+            }
+        } catch (NumberFormatException e) {
+            sendMessage(sender, "Invalid /roll command format. Use 'roll #d#' or 'roll #'");
+        }
+    }
+   
+    private void handleFlipCommand(ServerThread sender) {
+        // Coin toss (0 heads 1 tails)
+        int result = (int) (Math.random() * 2);
+   
+        // converts 0 and 1 to heads and tails
+        String flipResult = (result == 0) ? "heads" : "tails";
+   
+        // sends result to client
+        sendMessage(sender, "*flipped a coin and got " + flipResult + "*");
+    }
+
+
+
+
+   
+    private String processFormatting(String message) {
+        // regex for styles
+        Pattern boldPattern = Pattern.compile("\\*(.*?)\\*");
+        Pattern italicPattern = Pattern.compile("\\-(.*?)\\-");
+        Pattern underlinePattern = Pattern.compile("\\_(.*?)\\_");
+        Pattern redPattern = Pattern.compile("\\[r (.*?) r\\]");
+        Pattern greenPattern = Pattern.compile("\\[g (.*?) g\\]");
+        Pattern bluePattern = Pattern.compile("\\[b (.*?) b\\]");
+   
+        // Replace with HTML tags
+        message = replacePattern(message, boldPattern, "<b>$1</b>");
+        message = replacePattern(message, italicPattern, "<i>$1</i>");
+        message = replacePattern(message, underlinePattern, "<u>$1</u>");
+        message = replacePattern(message, redPattern, "<font color=red>$1</font>");
+        message = replacePattern(message, greenPattern, "<font color=green>$1</font>");
+        message = replacePattern(message, bluePattern, "<font color=blue>$1</font>");
+   
+        return message;
+    }
+   
+    private String replacePattern(String input, Pattern pattern, String replacement) {
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            matcher.appendReplacement(result, replacement);
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+    private void sendPrivateMessage(ServerThread sender, String message) {
+       
         String[] parts = message.split(" ", 2);
         if (parts.length == 2) {
             String username = parts[0].substring(1);
             String privateMessage = parts[1];
 
-            
+
+           
             ServerThread receiver = findClientByUsername(username);
 
-            
+
+           
             if (receiver != null) {
-                
+               
                 sender.sendMessage(sender.getClientId(), "[Private] to @" + username + ": " + privateMessage);
                 receiver.sendMessage(sender.getClientId(), "[Private] from @" + sender.getClientName() + ": " + privateMessage);
             } else {
-                
+               
                 sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "User @" + username + " not found.");
             }
         }
     }
+
 
     private ServerThread findClientByUsername(String username) {
         for (ServerThread client : clients) {
@@ -402,26 +442,52 @@ private void processMessageCommand(String message, ServerThread sender) {
         }
         return null;
     }
-
+//JMA85 12/13/23 Muted/Unmuted Messages
     private void muteUser(ServerThread sender, String targetUsername) {
         ServerThread targetUser = findClientByUsername(targetUsername);
         if (targetUser != null) {
-            mutedUsers.add(targetUsername); 
+            mutedUsers.add(targetUsername);
+            saveMutedUsers();  
             sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "You have muted @" + targetUsername);
-            
+            targetUser.sendMessage(sender.getClientId(), "You have been muted by @" + sender.getClientName());
         } else {
             sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "User @" + targetUsername + " not found.");
         }
     }
-    
+
     private void unmuteUser(ServerThread sender, String targetUsername) {
         ServerThread targetUser = findClientByUsername(targetUsername);
         if (targetUser != null) {
             mutedUsers.remove(targetUsername);
+            saveMutedUsers();  
             sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "You have unmuted @" + targetUsername);
-            
+            targetUser.sendMessage(sender.getClientId(), "You have been unmuted by @" + sender.getClientName());
         } else {
             sender.sendMessage(Constants.DEFAULT_CLIENT_ID, "User @" + targetUsername + " not found.");
         }
     }
+
+    
+    private void saveMutedUsers() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(MUTED_USERS_FILE))) {
+            for (String mutedUser : mutedUsers) {
+                writer.println(mutedUser);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadMutedUsers() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(MUTED_USERS_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                mutedUsers.add(line);
+            }
+        } catch (IOException e) {
+            
+        }
+    }
+
 }
+

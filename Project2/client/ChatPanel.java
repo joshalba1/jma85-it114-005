@@ -10,6 +10,7 @@ import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +18,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -27,6 +29,17 @@ import Project2.client.Card;
 import Project2.client.Client;
 import Project2.client.ClientUtils;
 import Project2.client.ICardControls;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.PrintWriter;
 
 public class ChatPanel extends JPanel {
     private static Logger logger = Logger.getLogger(ChatPanel.class.getName());
@@ -50,11 +63,26 @@ public class ChatPanel extends JPanel {
         wrapper.add(scroll);
         this.add(wrapper, BorderLayout.CENTER);
 
+
+        
         JPanel input = new JPanel();
         input.setLayout(new BoxLayout(input, BoxLayout.X_AXIS));
         JTextField textValue = new JTextField();
         input.add(textValue);
         JButton button = new JButton("Send");
+
+        
+        JPanel exportPanel = new JPanel();
+        exportPanel.setLayout(new BorderLayout());
+        JButton exportButton = new JButton("Export History");
+        exportButton.addActionListener((event) -> {
+            exportChatToFile();
+        });
+
+        exportPanel.add(exportButton, BorderLayout.EAST);
+        input.add(exportPanel);
+
+        //JMA85 12/1/23 ENTER KEY TO SEND CODE
         // lets us submit with the enter key instead of just the button click
         textValue.addKeyListener(new KeyListener() {
 
@@ -94,6 +122,12 @@ public class ChatPanel extends JPanel {
                 e1.printStackTrace();
             }
         });
+
+ 
+
+
+
+
         chatArea = content;
         input.add(button);
         userListPanel = new UserListPanel(controls);
@@ -174,4 +208,29 @@ public class ChatPanel extends JPanel {
         JScrollBar vertical = ((JScrollPane) chatArea.getParent().getParent()).getVerticalScrollBar();
         vertical.setValue(vertical.getMaximum());
     }
+
+    private void exportChatToFile() {
+            try {
+                String filePath = "chat_export.txt";
+                File file = new File(filePath);
+    
+                try (PrintWriter writer = new PrintWriter(file)) {
+                    Component[] components = chatArea.getComponents();
+                    for (Component component : components) {
+                        if (component instanceof JEditorPane) {
+                            JEditorPane textContainer = (JEditorPane) component;
+                            String text = textContainer.getText();
+                            writer.println(text);
+                        }
+                    }
+                }
+    
+                JOptionPane.showMessageDialog(this, "Chat exported to: " + filePath, "Export Successful", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Error exporting chat", ex);
+                JOptionPane.showMessageDialog(this, "Error exporting chat", "Export Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+
 }
