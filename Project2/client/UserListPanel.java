@@ -7,6 +7,8 @@ import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.awt.Color;
+
 
 import javax.swing.BoxLayout;
 import javax.swing.JEditorPane;
@@ -98,5 +100,13 @@ public class UserListPanel extends JPanel {
         for (Component c : cs) {
             userListArea.remove(c);
         }
+    }
+    protected void updateUserListItem(long clientId){
+        logger.log(Level.INFO,"removing userlist item for id"+clientId);
+        Component[] cs =userListArea.getComponents();
+        for(Component c:cs){
+            boolean isUser = c.getName().equals(clientId+"");
+            ((JEditorPane)c).setForeground((isUser ? Color.YELLOW : Color.BLACK));        }
+
     }
 }
