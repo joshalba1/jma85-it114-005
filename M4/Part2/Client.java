@@ -1,4 +1,6 @@
-package M4;
+package M4.Part2;
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,14 +26,17 @@ public class Client {
         if (server == null) {
             return false;
         }
-        //https://stackoverflow.com/a/10241044
-        //Note: these check the client's end of the socket connect; therefore they don't really help determine
-        //if the server had a problem
+        // https://stackoverflow.com/a/10241044
+        // Note: these check the client's end of the socket connect; therefore they
+        // don't really help determine
+        // if the server had a problem
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
-     
+
     }
+
     /**
      * Takes an ip address and a port to attempt a socket connection to a server.
+     * 
      * @param address
      * @param port
      * @return true if connection was successful
@@ -39,9 +44,9 @@ public class Client {
     private boolean connect(String address, int port) {
         try {
             server = new Socket(address, port);
-            //channel to send to server
+            // channel to send to server
             out = new PrintWriter(server.getOutputStream(), true);
-            //channelto list to server
+            // channelto list to server
             in = new BufferedReader(new InputStreamReader(server.getInputStream()));
             System.out.println("Client connected");
         } catch (UnknownHostException e) {
@@ -113,15 +118,28 @@ public class Client {
                     System.out.println("Waiting for input");
                     line = si.nextLine();
                     if (!processCommand(line)) {
-                        if(isConnected()){
+                        if (isConnected()) {
                             out.println(line);
-                            //https://stackoverflow.com/a/8190411
-                            //you'll notice it triggers on the second request after server socket closes
-                            if(out.checkError()){
+                            // https://stackoverflow.com/a/8190411
+                            // you'll notice it triggers on the second request after server socket closes
+                            if (out.checkError()) {
                                 System.out.println("Connection to server may have been lost");
                             }
-                        }
-                        else{
+                            //wait for reply
+                            //Note: now that we're attempting a read
+                            //we'll immediately get notified if the server's connection closes
+                            //Note2: if the server terminates before we send a message, client will exit
+                            //after the out.println() continues
+                            String fromServer = in.readLine();
+
+                            if (fromServer != null) {
+                                System.out.println("Reply from server: " + fromServer);
+                            } else {
+                                System.out.println("Server disconnected");
+                                break;
+                            }
+                            
+                        } else {
                             System.out.println("Not connected to server");
                         }
                     }
