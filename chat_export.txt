@@ -1,0 +1,280 @@
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *josh Joined the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *bill Joined the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *steve Joined the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: asd
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *josh Left the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *josh Joined the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *bill Left the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *bill Joined the room lobby*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: /createcroom test
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *josh Joined the room test*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *bill Joined the room test*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: asd
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: /roll 10
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: <b>rolled a 1</b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: /roll 10d3
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: <b>rolled a 17</b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    bill: /roll 6
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    bill: <b>rolled a 1</b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: /roll 10
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: <b>rolled a 5</b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    bill: /roll 10d5
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    bill: <b>rolled a 35</b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: /flip
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: <b>flipped a coin and got heads</b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: <b>asd</b> <i>asd</i> <u>asd</u> <font color="red">asd</font> <font color="blue">asd</font> 
+    <font color="green">asd</font>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: <b><i><u>asdasd </u></i></b>
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    *steve Joined the room test*
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    josh: [Private] to @bill: hello
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    Server: You have muted @bill
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    Server: You have unmuted @bill
+  </body>
+</html>
+
+<html>
+  <head>
+    
+  </head>
+  <body>
+    bill: asd
+  </body>
+</html>
+
